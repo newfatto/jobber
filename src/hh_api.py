@@ -41,7 +41,7 @@ def get_hh_data(company_list: List[str]) -> List[Dict[str, Any]] or None:
 
                 data = {"employers": employers, "vacancies": vacancies}
 
-        print(data)
+        print("Данные от hh получены")
         return data
 
     except Exception as e:

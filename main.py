@@ -1,4 +1,6 @@
+from config import config
 from src.hh_api import get_hh_data
+from src.utils import create_db_and_tables
 
 
 def main():
@@ -17,8 +19,8 @@ def main():
     ]
 
     data = get_hh_data(company_list)
-
-    pass
+    params = config()
+    create_db_and_tables("jobber", params)
 
 
 if __name__ == "__main__":
