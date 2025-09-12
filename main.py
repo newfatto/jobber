@@ -1,4 +1,5 @@
 from config import config
+from src.DBManager import DBManager
 from src.hh_api import get_hh_data
 from src.utils import create_db_and_tables, load_data_to_bd
 
@@ -25,4 +26,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+
+    params = config()
+    manager = DBManager("jobber", params)
+
+    print(manager.get_companies_and_vacancies_count())
