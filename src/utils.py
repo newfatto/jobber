@@ -4,8 +4,10 @@ import psycopg2
 from psycopg2 import errors, sql
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
+Params = Dict[str, Any]
 
-def create_db_and_tables(database_name: str, params) -> None:
+
+def create_db_and_tables(database_name: str, params: Params) -> None:
     """Функция создаёт базу данных и таблицы в PostgreSQL"""
     admin_conn = psycopg2.connect(database="postgres", **params)
     admin_conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
@@ -54,7 +56,7 @@ def create_db_and_tables(database_name: str, params) -> None:
         print("Созданы столбцы в таблицах")
 
 
-def load_data_to_bd(database_name, data, params):
+def load_data_to_bd(database_name: str, data: Dict[str, List[Dict[str, Any]]], params: Params) -> None:
     """Функция загружает полученные данные в базу данных"""
     with psycopg2.connect(database=database_name, **params) as conn:
 

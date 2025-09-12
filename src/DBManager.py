@@ -1,17 +1,25 @@
+from typing import Any, Dict, List, Optional, Tuple, cast
+
 import psycopg2
+from psycopg2.extensions import connection as PGConnection
 
 
 class DBManager:
+    """Класс для выполнения запросов к БД."""
 
-    def __init__(self, database_name, params):
-        self.db = database_name
-        self.params = params
+    def __init__(self, database_name: str, params: Dict[str, Any]) -> None:
+        self.db: str = database_name
+        self.params: Dict[str, Any] = params
 
-    def connect(self):
+    def connect(self) -> PGConnection:
+        """Создаёт соединение с БД (закрывается контекстным менеджером в методах)."""
         return psycopg2.connect(database=self.db, **self.params)
 
-    def get_companies_and_vacancies_count(self):
-        """Получает список всех компаний и количество вакансий у каждой компании."""
+    def get_companies_and_vacancies_count(self) -> List[Tuple[str, int]]:
+        """
+        Список всех компаний и количество вакансий у каждой.
+        Returns: [(employer_name, vacancies_count), ...]
+        """
         with self.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -23,11 +31,14 @@ class DBManager:
                 ORDER BY vacancies_count DESC
                 """
                 )
-                return cur.fetchall()
+                rows = cast(List[Tuple[str, int]], cur.fetchall())
+                return rows
 
-    def get_all_vacancies(self):
-        """Получает список всех вакансий с указанием названия компании,
-        названия вакансии и зарплаты и ссылки на вакансию."""
+    def get_all_vacancies(self) -> List[Tuple[str, str, Optional[int], str]]:
+        """
+        Список всех вакансий с полями: vacancy_name, employer_name, salary_from, url.
+        salary_from может быть NULL => Optional[int].
+        """
         with self.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -36,10 +47,14 @@ class DBManager:
                 JOIN employers AS e
                 USING(employer_id)"""
                 )
-                return cur.fetchall()
+                rows = cast(List[Tuple[str, str, Optional[int], str]], cur.fetchall())
+                return rows
 
-    def get_avg_salary(self):
-        """Получает среднюю зарплату по вакансиям, для которых указана зарплата."""
+    def get_avg_salary(self) -> List[Tuple[str, float]]:
+        """
+        Средняя зарплата по вакансиям, где salary_from указан.
+        Возвращает: [(vacancy_name, avg_salary), ...]
+        """
         with self.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -49,25 +64,33 @@ class DBManager:
                 GROUP BY v.name
                 ORDER BY avg_salary DESC"""
                 )
-                return cur.fetchall()
+                rows = cast(List[Tuple[str, int]], cur.fetchall())
+                return rows
 
-    def get_vacancies_with_higher_salary(self):
-        """Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям.
-        Для вакансий, у которых указана зарплата"""
+    def get_vacancies_with_higher_salary(self) -> List[Tuple[str, float]]:
+        """
+        Cписок всех вакансий (где указан salary_from), у которых зарплата выше средней по всем вакансиям.
+        Возвращает: [(vacancy_name, avg_salary), ...]
+        """
         with self.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """SELECT v.name, salary_from
-                FROM vacancies AS v
-                WHERE v.salary_from > (
+                    FROM vacancies AS v
+                    WHERE v.salary_from > (
                     SELECT AVG(salary_from)
                     FROM vacancies
-                )"""
+                    )
+                    ORDER BY salary_from DESC"""
                 )
-                return cur.fetchall()
+                rows = cast(List[Tuple[str, int]], cur.fetchall())
+                return rows
 
-    def get_vacancies_with_keyword(self, word: str):
-        """Получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python."""
+    def get_vacancies_with_keyword(self, word: str) -> List[Tuple[str]]:
+        """
+        Вакансии, в названии которых содержится слово `word`.
+        Возвращает: [(vacancy_name,), ...]
+        """
         with self.connect() as conn:
             with conn.cursor() as cur:
                 cur.execute(
@@ -78,8 +101,5 @@ class DBManager:
                 """,
                     (f"%{word}%",),
                 )
-                return cur.fetchall()
-
-
-if __name__ == "__main__":
-    from config import config
+                rows = cast(List[Tuple[str]], cur.fetchall())
+                return rows
