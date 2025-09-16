@@ -22,10 +22,7 @@
 ```
    
 2. Установите зависимости:
-```bash
-    pip install -r requirements.txt
-```
-или
+
 ```bash
     poetry install
 ```
